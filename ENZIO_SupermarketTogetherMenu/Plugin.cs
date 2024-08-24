@@ -2,13 +2,14 @@
 using BepInEx.Logging;
 using BepInEx.Unity.Mono;
 using HarmonyLib;
-using UnityEngine;
 using StarterAssets;
+using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 using Camera = UnityEngine.Camera;
-using Player = Rewired.Player;
+using RPlayer = Rewired.Player;
 
 namespace ENZIO;
 
@@ -26,6 +27,7 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
         Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
+        Harmony.CreateAndPatchAll(typeof(PatchNPCSpeed));
     }
 }
 
@@ -33,19 +35,19 @@ public class Plugin : BaseUnityPlugin
 class PatchPlayerNetwork
 {
     [HarmonyPrefix]
-    static bool Update(PlayerNetwork __instance, Player ___MainPlayer)
+    static bool Update(PlayerNetwork __instance, RPlayer ___MainPlayer)
     {
         if (SceneManager.GetActiveScene().buildIndex <= 0) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
-        Player player = ___MainPlayer;
+        RPlayer player = ___MainPlayer;
         if (player == null) return true;
         if (!__instance.isLocalPlayer) return true;
 
         FirstPersonController firstPersonController = Object.FindFirstObjectByType<FirstPersonController>();
         if (firstPersonController)
         {
-            firstPersonController.MoveSpeed = 10f;
-            firstPersonController.SprintSpeed = 5f;
+            firstPersonController.MoveSpeed = Settings.playerMoveSpeed;
+            firstPersonController.SprintSpeed = Settings.playerSprintSpeed;
         }
 
         if (player.GetButtonDown("Drop Item") && __instance.equippedItem > 0 && Settings.duping)
@@ -96,14 +98,39 @@ class PatchNPCManager
         __instance.extraEmployeeSpeedFactor = Settings.extraEmployeeSpeedFactor;
         __instance.maxEmployees = Settings.maxEmployees;
 
-        //NavMeshAgent[] employeesNavMeshAgent = __instance.employeeParentOBJ.GetComponentsInChildren<NavMeshAgent>();
-        //if (employeesNavMeshAgent == null || employeesNavMeshAgent.Length <= 0) return true;
-        //foreach (NavMeshAgent employeeNavMeshAgent in employeesNavMeshAgent)
-        //{
-        //    employeeNavMeshAgent.speed = Settings.speed;
-        //    employeeNavMeshAgent.acceleration = Settings.acceleration;
-        //    employeeNavMeshAgent.angularSpeed = Settings.angularSpeed;
-        //}
+        if(Settings.editEmployeeSpeed)
+        {
+            NavMeshAgent[] employeesNavMeshAgent = __instance.employeeParentOBJ.GetComponentsInChildren<NavMeshAgent>();
+            if (employeesNavMeshAgent == null || employeesNavMeshAgent.Length <= 0) return true;
+            foreach (NavMeshAgent employeeNavMeshAgent in employeesNavMeshAgent)
+            {
+                employeeNavMeshAgent.speed = Settings.npcSpeed;
+                employeeNavMeshAgent.acceleration = Settings.npcAcceleration;
+                employeeNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
+            }
+        }
+        if (Settings.editCustomerSpeed)
+        {
+            NavMeshAgent[] customersNavMeshAgent = __instance.customersnpcParentOBJ.GetComponentsInChildren<NavMeshAgent>();
+            if (customersNavMeshAgent == null || customersNavMeshAgent.Length <= 0) return true;
+            foreach (NavMeshAgent customerNavMeshAgent in customersNavMeshAgent)
+            {
+                customerNavMeshAgent.speed = Settings.npcSpeed;
+                customerNavMeshAgent.acceleration = Settings.npcAcceleration;
+                customerNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
+            }
+        }
+        if (Settings.editNpcSpeed)
+        {
+            NavMeshAgent[] npcsNavMeshAgent = __instance.dummynpcParentOBJ.GetComponentsInChildren<NavMeshAgent>();
+            if (npcsNavMeshAgent == null || npcsNavMeshAgent.Length <= 0) return true;
+            foreach (NavMeshAgent npcNavMeshAgent in npcsNavMeshAgent)
+            {
+                npcNavMeshAgent.speed = Settings.npcSpeed;
+                npcNavMeshAgent.acceleration = Settings.npcAcceleration;
+                npcNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
+            }
+        }
 
         return true;
     }
@@ -118,18 +145,12 @@ class PatchNPCInfo
         if (SceneManager.GetActiveScene().buildIndex <= 0) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
-        __instance.productCheckoutWait = Settings.productCheckoutWait;
-        __instance.productItemPlaceWait = Settings.productItemPlaceWait;
+        __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
+        __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
 
         if (__instance.isEmployee)
         {
             __instance.employeeItemPlaceWait = Settings.employeeItemPlaceWait;
-
-            //if (___npcAnimator)
-            //{
-            //    ___npcAnimator.speed = Settings.speed;
-            //    ___npcAnimator.SetFloat("MoveFactor", Settings.speed);
-            //}
         }
 
         return true;
@@ -142,7 +163,7 @@ class PatchNPCSpeed
     [HarmonyPrefix]
     static bool Start(NPC_Speed __instance)
     {
-        __instance.velocity = Settings.speed;
+        __instance.velocity = Settings.npcSpeed;
 
         return false;
     }
