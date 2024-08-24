@@ -12,7 +12,7 @@ using RPlayer = Rewired.Player;
 
 namespace ENZIO;
 
-[BepInPlugin(Settings.GUID, Settings.Name, Settings.Version)]
+[BepInPlugin(Settings.GUID, Settings.Author, Settings.Version)]
 [BepInProcess("Supermarket Together.exe")]
 public class Plugin : BaseUnityPlugin
 {
@@ -21,11 +21,18 @@ public class Plugin : BaseUnityPlugin
     private void Awake()
     {
         Logger = base.Logger;
-        Logger.LogInfo($"Plugin ${Settings.GUID} is loaded!");
+        Logger.LogMessage($"Plugin [{Settings.Name}] loaded!");
+
+        Settings.LoadSettings();
+        Logger.LogInfo($"[Settings] Loaded!");
+
 
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
+        Logger.LogInfo($"[Patched] Player!");
+
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
         Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
+        Logger.LogInfo($"[Patched] NPC!");
     }
 }
 
