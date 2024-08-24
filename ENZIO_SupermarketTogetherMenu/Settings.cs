@@ -2,27 +2,27 @@
 {
     internal class Settings
     {
-        public const string GUID = "org.bepinex.plugins.enziosupermarkettogether";
-        public const string Name = "ENZIO - Supermarket Together Menu";
-        public const string Version = "0.0.1";
+        internal const string GUID = "org.bepinex.plugins.enziosupermarkettogether";
+        internal const string Name = "ENZIO - Supermarket Together Menu";
+        internal const string Version = "0.0.1";
 
-        public static bool duping = true;
-        public static int dupingAmount = 10;
+        internal static bool duping = true;
+        internal static int dupingAmount = 10;
 
-        public static float playerMoveSpeed = 10f;
-        public static float playerSprintSpeed = 15f;
+        internal static float playerMoveSpeed = 10f;
+        internal static float playerSprintSpeed = 15f;
 
-        public static bool editEmployeeSpeed = true;
-        public static int maxEmployees = 10;
-        public static float employeeItemPlaceWait = 0.01f;
-        public static float extraEmployeeSpeedFactor = 0.5f;
+        internal static bool editEmployeeSpeed = true;
+        internal static int maxEmployees = 10;
+        internal static float employeeItemPlaceWait = 0.01f;
+        internal static float extraEmployeeSpeedFactor = 0.5f;
 
-        public static bool editCustomerSpeed = true;
-        public static bool editNpcSpeed = false;
-        public static float npcProductCheckoutWait = 0.01f;
-        public static float npcProductItemPlaceWait = 0.01f;
-        public static float npcSpeed = 10f;
-        public static float npcAcceleration = 50f;
-        public static float npcAngularSpeed = 1000f;
+        internal static bool editCustomerSpeed = true;
+        internal static bool editNpcSpeed = false;
+        internal static float npcProductCheckoutWait = 0.01f;
+        internal static float npcProductItemPlaceWait = 0.01f;
+        internal static float npcSpeed = 10f;
+        internal static float npcAcceleration = 50f;
+        internal static float npcAngularSpeed = 1000f;
     }
 }
