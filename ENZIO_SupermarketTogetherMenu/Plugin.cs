@@ -5,7 +5,6 @@ using HarmonyLib;
 using StarterAssets;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 using Camera = UnityEngine.Camera;
@@ -27,7 +26,6 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
         Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
-        Harmony.CreateAndPatchAll(typeof(PatchNPCSpeed));
     }
 }
 
@@ -37,7 +35,7 @@ class PatchPlayerNetwork
     [HarmonyPrefix]
     static bool Update(PlayerNetwork __instance, RPlayer ___MainPlayer)
     {
-        if (SceneManager.GetActiveScene().buildIndex <= 0) return true;
+        if (Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
         RPlayer player = ___MainPlayer;
         if (player == null) return true;
@@ -92,7 +90,7 @@ class PatchNPCManager
     [HarmonyPrefix]
     static bool FixedUpdate(NPC_Manager __instance)
     {
-        if (SceneManager.GetActiveScene().buildIndex <= 0) return true;
+        if (Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
         __instance.extraEmployeeSpeedFactor = Settings.extraEmployeeSpeedFactor;
@@ -142,7 +140,7 @@ class PatchNPCInfo
     [HarmonyPrefix]
     static bool FixedUpdate(NPC_Info __instance, Animator ___npcAnimator)
     {
-        if (SceneManager.GetActiveScene().buildIndex <= 0) return true;
+        if (Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
         __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
@@ -154,17 +152,5 @@ class PatchNPCInfo
         }
 
         return true;
-    }
-}
-
-[HarmonyPatch(typeof(NPC_Speed), "Start")]
-class PatchNPCSpeed
-{
-    [HarmonyPrefix]
-    static bool Start(NPC_Speed __instance)
-    {
-        __instance.velocity = Settings.npcSpeed;
-
-        return false;
     }
 }
