@@ -28,19 +28,19 @@
 
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>libs\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mirror">
-      <HintPath>libs\Mirror.dll</HintPath>
+      <HintPath>..\libs\Mirror.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rewired_Core">
-      <HintPath>libs\Rewired_Core.dll</HintPath>
+      <HintPath>..\libs\Rewired_Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.StarterAssets">
-      <HintPath>libs\Unity.StarterAssets.dll</HintPath>
+      <HintPath>..\libs\Unity.StarterAssets.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
