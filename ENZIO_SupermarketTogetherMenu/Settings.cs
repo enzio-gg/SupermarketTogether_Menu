@@ -1,20 +1,18 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using System.IO;
-using System.Runtime.CompilerServices;
-using static UnityEngine.Rendering.RayTracingAccelerationStructure;
 
 namespace ENZIO
 {
     internal static class Settings
     {
-        internal const string GUID = "org.bepinex.plugins.enziosupermarkettogether";
-        internal const string Author = "ENZIO";
-        internal const string Name = "ENZIO - Supermarket Together Menu";
-        internal const string Version = "0.0.1";
+        internal const string Guid = "org.bepinex.plugins.enziosupermarkettogether";
+        internal const string author = "ENZIO";
+        internal const string name = "ENZIO - Supermarket Together Menu";
+        internal const string version = "0.0.1";
 
         internal static bool duping;
-        internal static int dupingAmount;
+        internal static string dupingAmount;
 
         internal static float playerMoveSpeed = 10f;
         internal static float playerSprintSpeed = 15f;
@@ -37,11 +35,11 @@ namespace ENZIO
             var settings = new ConfigFile(Path.Combine(Paths.ConfigPath, "ENZIO.cfg"), true);
             var duping = settings.Bind("Duping",
                 "Activate",
-                false);
+                true);
             Settings.duping = duping.Value;
             var dupingAmount = settings.Bind("Duping",
                 "Amount",
-                10);
+                "2");
             Settings.dupingAmount = dupingAmount.Value;
         }
 
@@ -54,7 +52,7 @@ namespace ENZIO
             duping.Value = Settings.duping;
             var dupingAmount = settings.Bind("Duping",
             "Amount",
-                10);
+                "2");
             dupingAmount.Value = Settings.dupingAmount;
         }
     }

@@ -9,10 +9,11 @@ using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 using Camera = UnityEngine.Camera;
 using RPlayer = Rewired.Player;
+using System;
 
 namespace ENZIO;
 
-[BepInPlugin(Settings.GUID, Settings.Author, Settings.Version)]
+[BepInPlugin(Settings.Guid, Settings.author, Settings.version)]
 [BepInProcess("Supermarket Together.exe")]
 public class Plugin : BaseUnityPlugin
 {
@@ -20,8 +21,10 @@ public class Plugin : BaseUnityPlugin
 
     private void Awake()
     {
+        if (!SteamManager.Initialized) return;
+
         Logger = base.Logger;
-        Logger.LogMessage($"Plugin [{Settings.Name}] loaded!");
+        Logger.LogMessage($"Plugin [{Settings.name}] loaded!");
 
         Settings.LoadSettings();
         Logger.LogInfo($"[Settings] Loaded!");
@@ -30,11 +33,59 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
         Logger.LogInfo($"[Patched] Player!");
 
+        Harmony.CreateAndPatchAll(typeof(PatchUpdateEmployeeStats));
+        Harmony.CreateAndPatchAll(typeof(PatchSpawnEmployee));
+        Logger.LogInfo($"[Patched] Employee!");
+
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
         Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
         Logger.LogInfo($"[Patched] NPC!");
     }
+
+    private void Start() { }
+
+    private void Update()
+    {
+        if (!Helpers.IsMainSceneLoaded()) return;
+
+        if (Input.GetKeyDown(KeyCode.F1)) IGUI.showGui = !IGUI.showGui;
+
+        if (!IGUI.showGui && !IGUI.showGuiLastState) return;
+        if (IGUI.showGui && !IGUI.showGuiLastState)
+        {
+            IGUI.showGuiLastState = true;
+
+            IGUI.originalLockState = Cursor.lockState;
+            IGUI.originalVisible = Cursor.visible;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            if (Vars.firstPersonController != null)
+                Vars.firstPersonController.enabled = false;
+        }
+        if (!IGUI.showGui && IGUI.showGuiLastState)
+        {
+            IGUI.showGuiLastState = false;
+
+            Cursor.lockState = IGUI.originalLockState;
+            Cursor.visible = IGUI.originalVisible;
+            if (Vars.firstPersonController != null)
+                Vars.firstPersonController.enabled = true;
+        }
+    }
+
+    private void OnGUI()
+    {
+        if (!Helpers.IsMainSceneLoaded() || !IGUI.showGui) return;
+
+        IGUI.mainWindow = GUILayout.Window(0, IGUI.mainWindow, new GUI.WindowFunction(IGUI.MainWindow), Settings.name, Array.Empty<GUILayoutOption>());
+    }
 }
+
+
+
+
+
+
 
 [HarmonyPatch(typeof(PlayerNetwork), "Update")]
 class PatchPlayerNetwork
@@ -42,24 +93,24 @@ class PatchPlayerNetwork
     [HarmonyPrefix]
     static bool Update(PlayerNetwork __instance, RPlayer ___MainPlayer)
     {
-        if (Helpers.IsMainSceneLoaded()) return true;
+        if (!Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
         RPlayer player = ___MainPlayer;
         if (player == null) return true;
         if (!__instance.isLocalPlayer) return true;
 
-        FirstPersonController firstPersonController = Object.FindFirstObjectByType<FirstPersonController>();
-        if (firstPersonController)
+        if(Vars.firstPersonController == null) Vars.firstPersonController = Object.FindFirstObjectByType<FirstPersonController>();
+        if (Vars.firstPersonController)
         {
-            firstPersonController.MoveSpeed = Settings.playerMoveSpeed;
-            firstPersonController.SprintSpeed = Settings.playerSprintSpeed;
+            Vars.firstPersonController.MoveSpeed = Settings.playerMoveSpeed;
+            Vars.firstPersonController.SprintSpeed = Settings.playerSprintSpeed;
         }
 
         if (player.GetButtonDown("Drop Item") && __instance.equippedItem > 0 && Settings.duping)
         {
             Vector3 vector = Camera.main.transform.position + Camera.main.transform.forward * 3.5f;
 
-            for (int i = 0; i < Settings.dupingAmount; i++)
+            for (int i = 0; i < Int32.Parse(Settings.dupingAmount); i++)
                 switch (__instance.equippedItem)
                 {
                     case 0:
@@ -90,30 +141,21 @@ class PatchPlayerNetwork
     }
 }
 
-
 [HarmonyPatch(typeof(NPC_Manager), "FixedUpdate")]
 class PatchNPCManager
 {
     [HarmonyPrefix]
     static bool FixedUpdate(NPC_Manager __instance)
     {
-        if (Helpers.IsMainSceneLoaded()) return true;
+        if (!Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
+
+        if(Vars.npcManager == null) Vars.npcManager = __instance;
 
         __instance.extraEmployeeSpeedFactor = Settings.extraEmployeeSpeedFactor;
         __instance.maxEmployees = Settings.maxEmployees;
+        __instance.UpdateEmployeesNumberInBlackboard();
 
-        if(Settings.editEmployeeSpeed)
-        {
-            NavMeshAgent[] employeesNavMeshAgent = __instance.employeeParentOBJ.GetComponentsInChildren<NavMeshAgent>();
-            if (employeesNavMeshAgent == null || employeesNavMeshAgent.Length <= 0) return true;
-            foreach (NavMeshAgent employeeNavMeshAgent in employeesNavMeshAgent)
-            {
-                employeeNavMeshAgent.speed = Settings.npcSpeed;
-                employeeNavMeshAgent.acceleration = Settings.npcAcceleration;
-                employeeNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
-            }
-        }
         if (Settings.editCustomerSpeed)
         {
             NavMeshAgent[] customersNavMeshAgent = __instance.customersnpcParentOBJ.GetComponentsInChildren<NavMeshAgent>();
@@ -141,24 +183,43 @@ class PatchNPCManager
     }
 }
 
+[HarmonyPatch(typeof(NPC_Manager), "UpdateEmployeeStats")]
+class PatchUpdateEmployeeStats
+{
+    [HarmonyPrefix]
+    static bool UpdateEmployeeStats()
+    {
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployeeSpeed) return true;
+
+        Helpers.UpdateEmployeeStats();
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(NPC_Manager), "SpawnEmployee")]
+class PatchSpawnEmployee
+{
+    [HarmonyPostfix]
+    static void SpawnEmployee()
+    {
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployeeSpeed) return;
+
+        Helpers.UpdateEmployeeStats();
+    }
+}
+
 [HarmonyPatch(typeof(NPC_Info), "FixedUpdate")]
 class PatchNPCInfo
 {
     [HarmonyPrefix]
     static bool FixedUpdate(NPC_Info __instance, Animator ___npcAnimator)
     {
-        if (Helpers.IsMainSceneLoaded()) return true;
+        if (!Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
-        if (__instance.isEmployee)
-        {
-            __instance.employeeItemPlaceWait = Settings.employeeItemPlaceWait;
-        }
-        else
-        {
-            __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
-            __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
-        }
+        __instance.employeeItemPlaceWait = Settings.employeeItemPlaceWait;
+        __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
+        __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
 
         return true;
     }
