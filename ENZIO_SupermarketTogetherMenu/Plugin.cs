@@ -150,12 +150,14 @@ class PatchNPCInfo
         if (Helpers.IsMainSceneLoaded()) return true;
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
-        __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
-        __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
-
         if (__instance.isEmployee)
         {
             __instance.employeeItemPlaceWait = Settings.employeeItemPlaceWait;
+        }
+        else
+        {
+            __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
+            __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
         }
 
         return true;
