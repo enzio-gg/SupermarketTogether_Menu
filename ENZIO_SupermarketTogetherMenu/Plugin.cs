@@ -10,6 +10,8 @@ using Vector3 = UnityEngine.Vector3;
 using Camera = UnityEngine.Camera;
 using RPlayer = Rewired.Player;
 using System;
+using HighlightPlus;
+using Rewired.UI.ControlMapper;
 
 namespace ENZIO;
 
@@ -24,29 +26,31 @@ public class Plugin : BaseUnityPlugin
         if (!SteamManager.Initialized) return;
 
         Logger = base.Logger;
-        Logger.LogMessage($"Plugin [{Settings.name}] loaded!");
+        Logger.LogMessage($"{Settings.name} loaded");
 
         Settings.LoadSettings();
-        Logger.LogInfo($"[Settings] Loaded!");
-
+        Logger.LogInfo($"[Settings] Loaded");
 
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
-        Logger.LogInfo($"[Patched] Player!");
+        Logger.LogInfo($"[Patched] Player");
 
         Harmony.CreateAndPatchAll(typeof(PatchUpdateEmployeeStats));
         Harmony.CreateAndPatchAll(typeof(PatchSpawnEmployee));
-        Logger.LogInfo($"[Patched] Employee!");
+        Logger.LogInfo($"[Patched] Employee");
 
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
         Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
-        Logger.LogInfo($"[Patched] NPC!");
+        Logger.LogInfo($"[Patched] NPC");
+
+        Harmony.CreateAndPatchAll(typeof(PatchBuilderDecoration));
+        Logger.LogInfo($"[Patched] Decoration");
     }
 
     private void Start() { }
 
     private void Update()
     {
-        if (!Helpers.IsMainSceneLoaded()) return;
+        if (!Helpers.IsMainSceneLoaded()) return;        
 
         if (Input.GetKeyDown(KeyCode.F1)) IGUI.showGui = !IGUI.showGui;
 
@@ -75,18 +79,19 @@ public class Plugin : BaseUnityPlugin
 
     private void OnGUI()
     {
+        if (!IGUI.windows_initialized)
+        {
+            IGUI.SetupWindows();
+            Logger.LogInfo($"[Created] Windows");
+        }
         if (!Helpers.IsMainSceneLoaded() || !IGUI.showGui) return;
 
-        IGUI.mainWindow = GUILayout.Window(0, IGUI.mainWindow, new GUI.WindowFunction(IGUI.MainWindow), Settings.name, Array.Empty<GUILayoutOption>());
+        IGUI.ShowWindow("main", ref IGUI.mainWindow);
     }
 }
 
 
-
-
-
-
-
+// All Patches 
 [HarmonyPatch(typeof(PlayerNetwork), "Update")]
 class PatchPlayerNetwork
 {
@@ -222,5 +227,40 @@ class PatchNPCInfo
         __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
 
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(Builder_Decoration), "Update")]
+class PatchBuilderDecoration
+{
+    [HarmonyPostfix]
+    static void Update(Builder_Decoration __instance, GameObject ___dummyOBJ, RPlayer ___MainPlayer, int ___currentIndex, LayerMask ___lMask)
+    {
+        if (!Helpers.IsMainSceneLoaded()) return;
+        if (!__instance || !__instance.isActiveAndEnabled) return;
+
+        if (___dummyOBJ)
+        {
+            ___dummyOBJ.GetComponent<HighlightEffect>().glowHQColor = Color.green;
+            if (___MainPlayer.GetButtonDown("Build"))
+            {
+                GameData.Instance.GetComponent<NetworkSpawner>().CmdSpawnDecoration(___currentIndex, ___dummyOBJ.transform.position, ___dummyOBJ.transform.rotation.eulerAngles);
+            }
+            if (___MainPlayer.GetButtonDown("Main Action"))
+            {
+                ___dummyOBJ.transform.rotation = Quaternion.Euler(___dummyOBJ.transform.rotation.eulerAngles + new Vector3(0f, 90f, 0f));
+            }
+            if (___MainPlayer.GetButtonDown("Secondary Action"))
+            {
+                ___dummyOBJ.transform.rotation = Quaternion.Euler(___dummyOBJ.transform.rotation.eulerAngles - new Vector3(0f, 90f, 0f));
+            }
+            RaycastHit raycastHit;
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out raycastHit, 4f, ___lMask))
+            {
+                ___dummyOBJ.transform.position = raycastHit.point;
+                return;
+            }
+            ___dummyOBJ.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 4f;
+        }
     }
 }
