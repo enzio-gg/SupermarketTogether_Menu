@@ -88,10 +88,10 @@ namespace ENZIO
                 SetupWindows();
             }
         }
-        internal static Rect ShowWindow(int id, ref Rect windowRef)
+        internal static void ShowWindow(int id, ref Rect windowRef)
         {
             Window window = windows.Get(id);
-            return GUILayout.Window(window.id, windowRef, window.func, window.name, Array.Empty<GUILayoutOption>());
+            windowRef = GUILayout.Window(window.id, windowRef, window.func, window.name, Array.Empty<GUILayoutOption>());
         }
         internal static void ShowWindow(string ident, ref Rect windowRef)
         {
