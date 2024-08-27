@@ -25,6 +25,9 @@ namespace ENZIO
         internal static int maxEmployees = 10;
         internal static float employeeItemPlaceWait = 0.01f;
         internal static float extraEmployeeSpeedFactor = 0.5f;
+        internal static float employeeSpeed = 10f;
+        internal static float employeeAcceleration = 50f;
+        internal static float employeeAngularSpeed = 1000f;
 
         // NPC
         internal static bool editCustomers = false;
@@ -71,12 +74,21 @@ namespace ENZIO
             var extraEmployeeSpeedFactor = settings.Bind("Employee", "SpeedFactor", 0.5f);
             Settings.extraEmployeeSpeedFactor = extraEmployeeSpeedFactor.Value;
 
+            var employeeSpeed = settings.Bind("Employee", "Speed", 5f);
+            Settings.employeeSpeed = employeeSpeed.Value;
+
+            var employeeAcceleration = settings.Bind("Employee", "Acceleration", 50f);
+            Settings.employeeAcceleration = employeeAcceleration.Value;
+
+            var employeeAngularSpeed = settings.Bind("Employee", "AngularSpeed", 1000f);
+            Settings.employeeAngularSpeed = employeeAngularSpeed.Value;
+
 
             // NPC
             var editCustomers = settings.Bind("NPC", "EditCustomers", false);
             Settings.editCustomers = editCustomers.Value;
 
-            var editNpcs = settings.Bind("NPC", "EditNpcSpeed", false);
+            var editNpcs = settings.Bind("NPC", "EditNpcs", false);
             Settings.editNpcs = editNpcs.Value;
 
             var npcProductCheckoutWait = settings.Bind("NPC", "ProductCheckoutWait", 0.01f);
@@ -131,12 +143,21 @@ namespace ENZIO
             var extraEmployeeSpeedFactor = settings.Bind("Employee", "SpeedFactor", 0.5f);
             extraEmployeeSpeedFactor.Value = Settings.extraEmployeeSpeedFactor;
 
+            var employeeSpeed = settings.Bind("Employee", "Speed", 5f);
+            employeeSpeed.Value = Settings.employeeSpeed;
+
+            var employeeAcceleration = settings.Bind("Employee", "Acceleration", 50f);
+            employeeAcceleration.Value = Settings.employeeAcceleration;
+
+            var employeeAngularSpeed = settings.Bind("Employee", "AngularSpeed", 1000f);
+            employeeAngularSpeed.Value = Settings.employeeAngularSpeed;
+
 
             // NPC
             var editCustomers = settings.Bind("NPC", "EditCustomers", false);
             editCustomers.Value = Settings.editCustomers;
 
-            var editNpcs = settings.Bind("NPC", "EditNpcSpeed", false);
+            var editNpcs = settings.Bind("NPC", "EditNpcs", false);
             editNpcs.Value = Settings.editNpcs;
 
             var npcProductCheckoutWait = settings.Bind("NPC", "ProductCheckoutWait", 0.01f);
