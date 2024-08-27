@@ -169,13 +169,13 @@ namespace ENZIO
 
             GUILayout.BeginHorizontal([]);
             GUILayout.Label("Movement Speed:", [GUILayout.Width(130f)]);
-            Settings.playerMoveSpeed = float.Parse(GUILayout.TextArea(Settings.playerMoveSpeed.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            Settings.playerMoveSpeed = EditorGUILayout.FloatField(Settings.playerMoveSpeed);
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
             GUILayout.BeginHorizontal([]);
             GUILayout.Label("Sprinting Speed:", [GUILayout.Width(130f)]);
-            Settings.playerSprintSpeed = float.Parse(GUILayout.TextArea(Settings.playerSprintSpeed.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            Settings.playerSprintSpeed = EditorGUILayout.FloatField(Settings.playerSprintSpeed);
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
@@ -199,13 +199,31 @@ namespace ENZIO
 
             GUILayout.BeginHorizontal([]);
             GUILayout.Label("Item Place Wait Time:", [GUILayout.Width(130f)]);
-            Settings.employeeItemPlaceWait = float.Parse(GUILayout.TextArea(Settings.employeeItemPlaceWait.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            Settings.employeeItemPlaceWait = EditorGUILayout.FloatField(Settings.employeeItemPlaceWait);
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
             GUILayout.BeginHorizontal([]);
             GUILayout.Label("Speed Factor:", [GUILayout.Width(130f)]);
-            Settings.extraEmployeeSpeedFactor = float.Parse(GUILayout.TextArea(Settings.extraEmployeeSpeedFactor.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            Settings.extraEmployeeSpeedFactor = EditorGUILayout.FloatField(Settings.extraEmployeeSpeedFactor);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Speed:", [GUILayout.Width(130f)]);
+            Settings.employeeSpeed = EditorGUILayout.FloatField(Settings.employeeSpeed);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Acceleration:", [GUILayout.Width(130f)]);
+            Settings.employeeAcceleration = EditorGUILayout.FloatField(Settings.employeeAcceleration);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Angular Speed:", [GUILayout.Width(130f)]);
+            Settings.employeeAngularSpeed = EditorGUILayout.FloatField(Settings.employeeAngularSpeed);
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
