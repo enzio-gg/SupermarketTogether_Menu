@@ -29,7 +29,6 @@ public class Plugin : BaseUnityPlugin
         Logger.LogMessage($"{Settings.name} loaded");
 
         Settings.Load();
-        Settings.PrintAll();
         Logger.LogInfo($"[Settings] Loaded");
 
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
@@ -166,6 +165,8 @@ class PatchNPCManager
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
         if(Vars.npcManager == null) Vars.npcManager = __instance;
+         
+        if (Vars.npcManager.employeeParentOBJ.transform.childCount < Settings.maxEmployees) Helpers.UpdateEmployeeStats();
 
         return true;
     }
