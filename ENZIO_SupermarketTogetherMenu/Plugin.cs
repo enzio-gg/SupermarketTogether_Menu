@@ -166,7 +166,7 @@ class PatchNPCManager
 
         if(Vars.npcManager == null) Vars.npcManager = __instance;
          
-        if (Vars.npcManager.employeeParentOBJ.transform.childCount < Settings.maxEmployees) Helpers.UpdateEmployeeStats();
+        if(Vars.npcManager.employeeParentOBJ.transform.childCount < Settings.maxEmployees) Helpers.UpdateEmployeeStats();
 
         return true;
     }
