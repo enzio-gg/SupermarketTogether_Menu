@@ -28,7 +28,8 @@ public class Plugin : BaseUnityPlugin
         Logger = base.Logger;
         Logger.LogMessage($"{Settings.name} loaded");
 
-        Settings.LoadSettings();
+        Settings.Load();
+        Settings.PrintAll();
         Logger.LogInfo($"[Settings] Loaded");
 
         Harmony.CreateAndPatchAll(typeof(PatchPlayerNetwork));
@@ -38,8 +39,11 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(PatchSpawnEmployee));
         Logger.LogInfo($"[Patched] Employee");
 
+        Harmony.CreateAndPatchAll(typeof(PatchSpawnCustomer));
+        Logger.LogInfo($"[Patched] Customer");
+
         Harmony.CreateAndPatchAll(typeof(PatchNPCManager));
-        Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
+        // Harmony.CreateAndPatchAll(typeof(PatchNPCInfo));
         Logger.LogInfo($"[Patched] NPC");
 
         Harmony.CreateAndPatchAll(typeof(PatchBuilderDecoration));
@@ -115,7 +119,7 @@ class PatchPlayerNetwork
         {
             Vector3 vector = Camera.main.transform.position + Camera.main.transform.forward * 3.5f;
 
-            for (int i = 0; i < Int32.Parse(Settings.dupingAmount); i++)
+            for (int i = 0; i < Settings.dupingAmount; i++)
                 switch (__instance.equippedItem)
                 {
                     case 0:
@@ -152,37 +156,16 @@ class PatchNPCManager
     [HarmonyPrefix]
     static bool FixedUpdate(NPC_Manager __instance)
     {
-        if (!Helpers.IsMainSceneLoaded()) return true;
+        if (!Helpers.IsMainSceneLoaded())
+        {
+            if (Vars.npcManager != null) Vars.npcManager = null;
+            if (Vars.player != null) Vars.player = null;
+            if (Vars.firstPersonController != null) Vars.firstPersonController = null;
+            return true;
+        }
         if (!__instance || !__instance.isActiveAndEnabled) return true;
 
         if(Vars.npcManager == null) Vars.npcManager = __instance;
-
-        __instance.extraEmployeeSpeedFactor = Settings.extraEmployeeSpeedFactor;
-        __instance.maxEmployees = Settings.maxEmployees;
-        __instance.UpdateEmployeesNumberInBlackboard();
-
-        if (Settings.editCustomerSpeed)
-        {
-            NavMeshAgent[] customersNavMeshAgent = __instance.customersnpcParentOBJ.GetComponentsInChildren<NavMeshAgent>();
-            if (customersNavMeshAgent == null || customersNavMeshAgent.Length <= 0) return true;
-            foreach (NavMeshAgent customerNavMeshAgent in customersNavMeshAgent)
-            {
-                customerNavMeshAgent.speed = Settings.npcSpeed;
-                customerNavMeshAgent.acceleration = Settings.npcAcceleration;
-                customerNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
-            }
-        }
-        if (Settings.editNpcSpeed)
-        {
-            NavMeshAgent[] npcsNavMeshAgent = __instance.dummynpcParentOBJ.GetComponentsInChildren<NavMeshAgent>();
-            if (npcsNavMeshAgent == null || npcsNavMeshAgent.Length <= 0) return true;
-            foreach (NavMeshAgent npcNavMeshAgent in npcsNavMeshAgent)
-            {
-                npcNavMeshAgent.speed = Settings.npcSpeed;
-                npcNavMeshAgent.acceleration = Settings.npcAcceleration;
-                npcNavMeshAgent.angularSpeed = Settings.npcAngularSpeed;
-            }
-        }
 
         return true;
     }
@@ -194,7 +177,7 @@ class PatchUpdateEmployeeStats
     [HarmonyPrefix]
     static bool UpdateEmployeeStats()
     {
-        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployeeSpeed) return true;
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployees) return true;
 
         Helpers.UpdateEmployeeStats();
         return false;
@@ -207,28 +190,37 @@ class PatchSpawnEmployee
     [HarmonyPostfix]
     static void SpawnEmployee()
     {
-        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployeeSpeed) return;
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editEmployees) return;
 
         Helpers.UpdateEmployeeStats();
     }
 }
 
-[HarmonyPatch(typeof(NPC_Info), "FixedUpdate")]
-class PatchNPCInfo
+[HarmonyPatch(typeof(NPC_Manager), "SpawnCustomerNCP")]
+class PatchSpawnCustomer
 {
-    [HarmonyPrefix]
-    static bool FixedUpdate(NPC_Info __instance, Animator ___npcAnimator)
+    [HarmonyPostfix]
+    static void SpawnCustomerNCP()
     {
-        if (!Helpers.IsMainSceneLoaded()) return true;
-        if (!__instance || !__instance.isActiveAndEnabled) return true;
+        Plugin.Logger.LogError("SpawnCustomerNCP");
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editCustomers) return;
 
-        __instance.employeeItemPlaceWait = Settings.employeeItemPlaceWait;
-        __instance.productCheckoutWait = Settings.npcProductCheckoutWait;
-        __instance.productItemPlaceWait = Settings.npcProductItemPlaceWait;
-
-        return true;
+        Helpers.UpdateCustomerStats();
     }
 }
+
+//[HarmonyPatch(typeof(NPC_Info), "FixedUpdate")]
+//class PatchNPCInfo
+//{
+//    [HarmonyPrefix]
+//    static bool FixedUpdate(NPC_Info __instance, Animator ___npcAnimator)
+//    {
+//        if (!Helpers.IsMainSceneLoaded()) return true;
+//        if (!__instance || !__instance.isActiveAndEnabled) return true;
+//
+//        return true;
+//    }
+//}
 
 [HarmonyPatch(typeof(Builder_Decoration), "Update")]
 class PatchBuilderDecoration
@@ -236,7 +228,7 @@ class PatchBuilderDecoration
     [HarmonyPostfix]
     static void Update(Builder_Decoration __instance, GameObject ___dummyOBJ, RPlayer ___MainPlayer, int ___currentIndex, LayerMask ___lMask)
     {
-        if (!Helpers.IsMainSceneLoaded()) return;
+        if (!Helpers.IsMainSceneLoaded() || !Settings.editDecorationPlacement) return;
         if (!__instance || !__instance.isActiveAndEnabled) return;
 
         if (___dummyOBJ)

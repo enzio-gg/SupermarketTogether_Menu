@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using UnityEngine;
 
@@ -66,7 +67,7 @@ namespace ENZIO
         internal static Rect mainWindow = new Rect(Screen.width - 360f, 10f, 350f, 350f);
 
         internal static int gridSelected = 0;
-        internal static string[] gridStrings = { "General", "Player", "NPC" };
+        internal static string[] gridStrings = { "General", "Player", "Employee", "Customer" };
 
 
         internal static void SetupWindows()
@@ -91,20 +92,20 @@ namespace ENZIO
         internal static void ShowWindow(int id, ref Rect windowRef)
         {
             Window window = windows.Get(id);
-            windowRef = GUILayout.Window(window.id, windowRef, window.func, window.name, Array.Empty<GUILayoutOption>());
+            windowRef = GUILayout.Window(window.id, windowRef, window.func, window.name, []);
         }
         internal static void ShowWindow(string ident, ref Rect windowRef)
         {
             Window window = windows.Get(ident);
-            windowRef = GUILayout.Window(window.id, windowRef, window.func, window.name, Array.Empty<GUILayoutOption>());
+            windowRef = GUILayout.Window(window.id, windowRef, window.func, window.name, []);
         }
 
 
         // Windows
         internal static void MainWindow(int id)
         {
-            GUILayout.BeginArea(new Rect(10f, 25f, 330f, 330f));
-            gridSelected = GUILayout.SelectionGrid(gridSelected, gridStrings, 3);
+            GUILayout.BeginArea(new Rect(10f, 25f, 330f, 340f));
+            gridSelected = GUILayout.SelectionGrid(gridSelected, gridStrings, 4);
             GUILayout.Space(4f);
             switch (gridSelected)
             {
@@ -112,10 +113,13 @@ namespace ENZIO
                     MainWindowGeneral();
                     break;
                 case 1:
-                    GUILayout.Label("Player selected");
+                    MainWindowPlayer();
                     break;
                 case 2:
-                    GUILayout.Label("NPC selected");
+                    MainWindowEmployee();
+                    break;
+                case 3:
+                    MainWindowCustomer();
                     break;
                 default:
                     MainWindowGeneral();
@@ -124,32 +128,99 @@ namespace ENZIO
             GUILayout.EndArea();
 
             GUILayout.FlexibleSpace();
+            GUILayout.BeginVertical([]);
+            if (GUILayout.Button("Save Settings")) Settings.Save();
+            GUILayout.EndVertical();
             GUIStyle guistyle = new GUIStyle(GUI.skin.label);
             guistyle.fontSize = 14;
             guistyle.fontStyle = FontStyle.Bold;
             guistyle.normal.textColor = new Color(1.0f, 0.64f, 0.0f);
-            GUILayout.Label("Powered by ENZIO", guistyle, new GUILayoutOption[] { GUILayout.ExpandWidth(true) });
+            GUILayout.Label("Powered by ENZIO", guistyle, [GUILayout.ExpandWidth(true)]);
 
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 20f));
         }
         internal static void MainWindowGeneral()
         {
-            GUILayout.BeginVertical(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginVertical([]);
 
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label("Activate Duping:", new GUILayoutOption[] { GUILayout.Width(120f) });
-            if (GUILayout.Toggle(Settings.duping, "") != Settings.duping)
-                Settings.duping = !Settings.duping;
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Activate Duping:", [GUILayout.Width(130f)]);
+            if (GUILayout.Toggle(Settings.duping, "") != Settings.duping) Settings.duping = !Settings.duping;
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label("Duping Amount:", new GUILayoutOption[] { GUILayout.Width(120f) });
-            Settings.dupingAmount = GUILayout.TextArea(Settings.dupingAmount, 3, new GUILayoutOption[] { GUILayout.Width(40f) });
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Duping Amount:", [GUILayout.Width(130f)]);
+            Settings.dupingAmount = Int32.Parse(GUILayout.TextArea(Settings.dupingAmount.ToString(), 24, [GUILayout.Width(60f)]));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Edit Decoration:", [GUILayout.Width(130f)]);
+            if (GUILayout.Toggle(Settings.editDecorationPlacement, "") != Settings.editDecorationPlacement) Settings.editDecorationPlacement = !Settings.editDecorationPlacement;
             GUILayout.EndHorizontal();
             GUILayout.Space(4f);
 
             GUILayout.EndVertical();
+        }
+        internal static void MainWindowPlayer()
+        {
+            GUILayout.BeginVertical([]);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Movement Speed:", [GUILayout.Width(130f)]);
+            Settings.playerMoveSpeed = float.Parse(GUILayout.TextArea(Settings.playerMoveSpeed.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Sprinting Speed:", [GUILayout.Width(130f)]);
+            Settings.playerSprintSpeed = float.Parse(GUILayout.TextArea(Settings.playerSprintSpeed.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.EndVertical();
+        }
+        internal static void MainWindowEmployee()
+        {
+            GUILayout.BeginVertical([]);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Activate Employee changes:", [GUILayout.Width(130f)]);
+            if (GUILayout.Toggle(Settings.editEmployees, "") != Settings.editEmployees) Settings.editEmployees = !Settings.editEmployees;
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Max Employees:", [GUILayout.Width(130f)]);
+            Settings.maxEmployees = Int32.Parse(GUILayout.TextArea(Settings.maxEmployees.ToString(), 24, [GUILayout.Width(60f)]));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Item Place Wait Time:", [GUILayout.Width(130f)]);
+            Settings.employeeItemPlaceWait = float.Parse(GUILayout.TextArea(Settings.employeeItemPlaceWait.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginHorizontal([]);
+            GUILayout.Label("Speed Factor:", [GUILayout.Width(130f)]);
+            Settings.extraEmployeeSpeedFactor = float.Parse(GUILayout.TextArea(Settings.extraEmployeeSpeedFactor.ToString("G7", CultureInfo.GetCultureInfo("en-US")), 24, [GUILayout.Width(60f)]), CultureInfo.GetCultureInfo("en-US"));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4f);
+
+            GUILayout.BeginVertical([]);
+            if (GUILayout.Button("Apply Changes")) Helpers.UpdateEmployeeStats();
+            GUILayout.EndVertical();
+            GUILayout.Space(4f);
+
+            GUILayout.EndVertical();
+        }
+        internal static void MainWindowCustomer()
+        {
+        }
+        internal static void MainWindowNpc()
+        {
         }
     }
 }
